@@ -10,14 +10,15 @@
   :use_test_preprocessor: TRUE
   :use_auxiliary_dependencies: TRUE
   :build_root: build
-#  :release_build: TRUE
+  :release_build: TRUE
   :test_file_prefix: test_
 
-#:release_build:
-#  :output: MyApp.out
-#  :use_assembly: FALSE
+:release_build:
+ :output: MyPicApp.out
+ :use_assembly: FALSE
 
 :environment:
+  - path: "C:/Program Files (x86)/Microchip/xc16/v1.10/bin;#{ENV['PATH']}"
 
 :extension:
   :executable: .out
@@ -30,12 +31,20 @@
     - src/**
   :support:
     - test/support
+  :include:
+    - "C:/Program Files (x86)/Microchip/xc16/v1.10/support/PIC24H/h/"
 
 :defines:
   # in order to add common defines:
   #  1) remove the trailing [] from the :common: section
   #  2) add entries to the :common: section (e.g. :test: has TEST defined)
-  :commmon: &common_defines []
+  :commmon: &common_defines
+    - __PIC24HJ128GP202__
+    - UNITY_INT_WIDTH=16
+    - CMOCK_MEM_INDEX_TYPE=uint16_t
+    - CMOCK_MEM_PTR_AS_INT=uint16_t
+    - CMOCK_MEM_ALIGN=1
+    - CMOCK_MEM_SIZE=4096
   :test:
     - *common_defines
     - TEST
@@ -57,10 +66,59 @@
     int8:     INT8
     bool:     UINT8
 
-#:tools:
-# Ceedling defaults to using gcc for compiling, linking, etc.
-# As [:tools] is blank, gcc will be used (so long as it's in your system path)
-# See documentation to configure a given toolchain for use
+:tools:
+  :test_compiler:
+    :executable: "xc16-gcc.exe"
+    :arguments:
+      - -mcpu=24HJ128GP202
+      - -x c
+      - -c
+      - "${1}"
+      - -o "${2}"
+      - -D$: COLLECTION_DEFINES_TEST_AND_VENDOR
+      - -I"$": COLLECTION_PATHS_TEST_SUPPORT_SOURCE_INCLUDE_VENDOR
+      - -Wall
+      #- -Werror  # We can't keep this on during test becuase of a CMock pointer issue
+      - -Os
+      - -mlarge-code
+      - -mlarge-arrays
+  :test_linker:
+    :executable: xc16-gcc.exe
+    :arguments:
+      - -mcpu=24HJ128GP202
+      - ${1}
+      - -o "./build/release/TestBuild.out"
+      - -Wl,-Tp24HJ128GP202.gld,-Map=./build/release/TestOutput.map,--report-mem
+  :test_fixture:
+    :executable: ruby.exe
+    :name: "Microchip simulator test fixture"
+    :stderr_redirect: :win #inform Ceedling what model of $stderr capture to use
+    :arguments:
+      - test/simulation/sim_test_fixture.rb
+
+  :release_compiler:
+    :executable: "xc16-gcc.exe"
+    :arguments:
+      - -mcpu=24HJ128GP202
+      - -x c
+      - -c
+      - "${1}"
+      - -o "${2}"
+      - -I"$": COLLECTION_PATHS_SOURCE_INCLUDE_VENDOR
+      - -I"$": COLLECTION_PATHS_RELEASE_TOOLCHAIN_INCLUDE
+      - -D$: COLLECTION_DEFINES_RELEASE_AND_VENDOR
+      - -Wall
+      - -Werror
+      - -Os
+      - -mlarge-code
+      - -mlarge-arrays
+  :release_linker:
+    :executable: xc16-gcc.exe
+    :arguments:
+      - -mcpu=24HJ128GP202
+      - ${1}
+      - -o "${2}"
+      - -Wl,-Tp24HJ128GP202.gld,-Map=./build/release/MyPicApp.map,--report-mem
 
 :plugins:
   :load_paths:
