@@ -18,7 +18,6 @@
  :use_assembly: FALSE
 
 :environment:
-  - path: "C:/Program Files (x86)/Microchip/xc16/v1.10/bin;#{ENV['PATH']}"
 
 :extension:
   :executable: .out
