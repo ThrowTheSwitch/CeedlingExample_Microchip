@@ -67,7 +67,7 @@
 
 :tools:
   :test_compiler:
-    :executable: "xc16-gcc.exe"
+    :executable: xc16-gcc
     :arguments:
       - -mcpu=24HJ128GP202
       - -x c
@@ -82,21 +82,21 @@
       - -mlarge-code
       - -mlarge-arrays
   :test_linker:
-    :executable: xc16-gcc.exe
+    :executable: xc16-gcc
     :arguments:
       - -mcpu=24HJ128GP202
       - ${1}
       - -o "./build/release/TestBuild.out"
       - -Wl,-Tp24HJ128GP202.gld,-Map=./build/release/TestOutput.map,--report-mem
   :test_fixture:
-    :executable: ruby.exe
+    :executable: ruby
     :name: "Microchip simulator test fixture"
     :stderr_redirect: :win #inform Ceedling what model of $stderr capture to use
     :arguments:
       - test/simulation/sim_test_fixture.rb
 
   :release_compiler:
-    :executable: "xc16-gcc.exe"
+    :executable: xc16-gcc
     :arguments:
       - -mcpu=24HJ128GP202
       - -x c
@@ -112,7 +112,7 @@
       - -mlarge-code
       - -mlarge-arrays
   :release_linker:
-    :executable: xc16-gcc.exe
+    :executable: xc16-gcc
     :arguments:
       - -mcpu=24HJ128GP202
       - ${1}

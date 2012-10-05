@@ -1,5 +1,4 @@
-test_main.c:14:test_main_function_should_return_when_ShouldAbortApp_returns_true:PASS
-test_main.c:22:test_test_main_should_call_LED_State_for_each_LED_on_and_then_off:PASS
+test_system.c:12:test_ShouldAbortApp_should_return_false_for_now:PASS
 -----------------------
-2 Tests 0 Failures 0 Ignored
+1 Tests 0 Failures 0 Ignored
 OK
