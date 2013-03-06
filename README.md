@@ -1,7 +1,9 @@
 CeedlingExample_Microchip
 =========================
 
-An example project demonstrating how to configure Ceedling for use with Microchip's compiler and simulator
+An example project demonstrating how to configure Ceedling for use with Microchip's compiler and simulator.
+
+See http://spin.atomicobject.com/2012/10/22/getting-started-with-tdd-for-microchips-pics/ for a walkthough/tutorial that goes along with this project.
 
 =========================
 
