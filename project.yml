@@ -31,7 +31,7 @@
   :support:
     - test/support
   :include:
-    - "C:/Program Files (x86)/Microchip/xc16/v1.10/support/PIC24H/h/"
+    - "C:/ProgramFiles/Microchip/xc16/v1.61/support/PIC24H/h/"
 
 :defines:
   # in order to add common defines:
@@ -78,7 +78,7 @@
       - -I"$": COLLECTION_PATHS_TEST_SUPPORT_SOURCE_INCLUDE_VENDOR
       - -Wall
       #- -Werror  # We can't keep this on during test becuase of a CMock pointer issue
-      - -Os
+      # - -Os # This works only with paid XC16 compiler versions
       - -mlarge-code
       - -mlarge-arrays
   :test_linker:
@@ -108,7 +108,7 @@
       - -D$: COLLECTION_DEFINES_RELEASE_AND_VENDOR
       - -Wall
       - -Werror
-      - -Os
+      # - -Os # This works only with paid XC16 compiler versions
       - -mlarge-code
       - -mlarge-arrays
   :release_linker:
