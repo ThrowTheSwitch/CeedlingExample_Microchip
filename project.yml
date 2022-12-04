@@ -10,14 +10,23 @@
   :use_test_preprocessor: TRUE
   :use_auxiliary_dependencies: TRUE
   :build_root: build
-  :release_build: TRUE
+  :release_build: FALSE
   :test_file_prefix: test_
+  :which_ceedling: vendor/ceedling
+  :ceedling_version: 0.31.1
+  :default_tasks:
+    - test:all
 
-:release_build:
- :output: MyPicApp.out
- :use_assembly: FALSE
+#:test_build:
+#  :use_assembly: TRUE
+
+# :release_build:
+#   :output: MyApp.out
+#   :use_assembly: FALSE
 
 :environment:
+   - :mcu: 24HJ128GP202
+   - :homedir: /User/directory
 
 :extension:
   :executable: .out
@@ -31,13 +40,13 @@
   :support:
     - test/support
   :include:
-    - "C:/ProgramFiles/Microchip/xc16/v1.61/support/PIC24H/h/"
+    - /Applications/microchip/xc16/v2.00/support/PIC24H/h/
 
 :defines:
   # in order to add common defines:
   #  1) remove the trailing [] from the :common: section
   #  2) add entries to the :common: section (e.g. :test: has TEST defined)
-  :commmon: &common_defines
+  :common: &common_defines
     - __PIC24HJ128GP202__
     - UNITY_INT_WIDTH=16
     - CMOCK_MEM_INDEX_TYPE=uint16_t
@@ -65,11 +74,22 @@
     int8:     INT8
     bool:     UINT8
 
+# Add -gcov to the plugins list to make sure of the gcov plugin
+# You will need to have gcov and gcovr both installed to make it work.
+# For more information on these options, see docs in plugins/gcov
+:gcov:
+  :reports:
+    - HtmlDetailed
+  :gcovr:
+    :html_medium_threshold: 75
+    :html_high_threshold: 90
+
+
 :tools:
   :test_compiler:
     :executable: xc16-gcc
     :arguments:
-      - -mcpu=24HJ128GP202
+      - -mcpu=#{ENV['MCU']}
       - -x c
       - -c
       - "${1}"
@@ -79,26 +99,27 @@
       - -Wall
       #- -Werror  # We can't keep this on during test becuase of a CMock pointer issue
       # - -Os # This works only with paid XC16 compiler versions
-      - -mlarge-code
-      - -mlarge-arrays
+      # - -mlarge-code
+      # - -mlarge-arrays
+      - -mdfp=#{ENV['HOMEDIR']}/.mchp_packs/Microchip/dsPIC33F-GP-MC_DFP/1.3.64/xc16
   :test_linker:
     :executable: xc16-gcc
     :arguments:
-      - -mcpu=24HJ128GP202
+      - -mcpu=#{ENV['MCU']}
       - ${1}
-      - -o "./build/release/TestBuild.out"
-      - -Wl,-Tp24HJ128GP202.gld,-Map=./build/release/TestOutput.map,--report-mem
+      - -o "./build/test/TestBuild.out"
+      - -Wl,-Tp24HJ128GP202.gld
   :test_fixture:
     :executable: ruby
     :name: "Microchip simulator test fixture"
-    :stderr_redirect: :win #inform Ceedling what model of $stderr capture to use
+    :stderr_redirect: :auto #inform Ceedling what model of $stderr capture to use
     :arguments:
       - test/simulation/sim_test_fixture.rb
 
   :release_compiler:
     :executable: xc16-gcc
     :arguments:
-      - -mcpu=24HJ128GP202
+      - -mcpu=#{ENV['MCU']}
       - -x c
       - -c
       - "${1}"
@@ -109,15 +130,31 @@
       - -Wall
       - -Werror
       # - -Os # This works only with paid XC16 compiler versions
-      - -mlarge-code
-      - -mlarge-arrays
+      # - -mlarge-code
+      # - -mlarge-arrays
   :release_linker:
     :executable: xc16-gcc
     :arguments:
-      - -mcpu=24HJ128GP202
+      - -mcpu=#{ENV['MCU']}
       - ${1}
       - -o "${2}"
-      - -Wl,-Tp24HJ128GP202.gld,-Map=./build/release/MyPicApp.map,--report-mem
+      - -Wl,-Tp#{ENV['MCU']}.gld,-Map=./build/release/MyApp.map,--report-mem
+#:tools:
+# Ceedling defaults to using gcc for compiling, linking, etc.
+# As [:tools] is blank, gcc will be used (so long as it's in your system path)
+# See documentation to configure a given toolchain for use
+
+# LIBRARIES
+# These libraries are automatically injected into the build process. Those specified as
+# common will be used in all types of builds. Otherwise, libraries can be injected in just
+# tests or releases. These options are MERGED with the options in supplemental yaml files.
+:libraries:
+  :placement: :end
+  :flag: "-l${1}"
+  :path_flag: "-L ${1}"
+  :system: []    # for example, you might list 'm' to grab the math library
+  :test: []
+  :release: []
 
 :plugins:
   :load_paths:
@@ -125,4 +162,5 @@
   :enabled:
     - stdout_pretty_tests_report
     - module_generator
+    - raw_output_report
 ...
