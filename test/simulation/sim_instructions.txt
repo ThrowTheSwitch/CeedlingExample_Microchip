@@ -1,6 +1,17 @@
-LD pic24super                  
-LC build/release/TestBuild.out
-IO NULL test/simulation/out.txt
-RP
-E
-quit
+Device PIC24HJ128GP202
+Hwtool SIM
+
+set uart1io.output             file
+set uart1io.outputfile         ./test/simulation/out.txt
+set uart1io.uartioenabled      true
+
+
+
+program ./build/test/TestBuild.out
+Reset
+Sleep 100
+Run
+
+# Wait for mdb to write results to outputfile.
+Wait 500
+Quit
