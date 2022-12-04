@@ -1,5 +1,5 @@
-require 'plugin'
-require 'constants'
+require 'ceedling/plugin'
+require 'ceedling/constants'
 require 'erb'
 require 'fileutils'
 
@@ -7,138 +7,74 @@ class ModuleGenerator < Plugin
 
   attr_reader :config
 
-  def setup
-  
-    #---- New module templates
-    
-    @test_template = (<<-EOS).left_margin
-      #include "unity.h"
-      <%if defined?(MODULE_GENERATOR_TEST_INCLUDES) && (MODULE_GENERATOR_TEST_INCLUDES.class == Array) && !MODULE_GENERATOR_TEST_INCLUDES.empty?%>
-      <%MODULE_GENERATOR_TEST_INCLUDES.each do |header_file|%>
-      #include "<%=header_file%>"
-      <%end%>
-      <%end%>
-      #include "<%=@context[:headername]%>"
-      
-      void setUp(void)
-      {
-      }
-      
-      void tearDown(void)
-      {
-      }
-      
-      void test_<%=name%>_needs_to_be_implemented(void)
-      {
-      <%="\t"%>TEST_IGNORE_MESSAGE("Implement me!");
-      }
-      EOS
+  def create(module_name, optz={})
 
-    @source_template = (<<-EOS).left_margin
-      <%if defined?(MODULE_GENERATOR_SOURCE_INCLUDES) && (MODULE_GENERATOR_SOURCE_INCLUDES.class == Array) && !MODULE_GENERATOR_SOURCE_INCLUDES.empty?%>
-      <%MODULE_GENERATOR_SOURCE_INCLUDES.each do |header_file|%>
-      #include "<%=header_file%>"
-      <%end%>
-      <%end%>
-      #include "<%=@context[:headername]%>"
-      EOS
+    require "generate_module.rb" #From Unity Scripts
 
-    @header_template = (<<-EOS).left_margin
-      #ifndef <%=@context[:name]%>_H
-      #define <%=@context[:name]%>_H
-      
-      <%if defined?(MODULE_GENERATOR_HEADER_INCLUDES) && (MODULE_GENERATOR_HEADER_INCLUDES.class == Array) && !MODULE_GENERATOR_HEADER_INCLUDES.empty?%>
-      <%MODULE_GENERATOR_HEADER_INCLUDES.each do |header_file|%>
-      #include "<%=header_file%>"
-      <%end%>
-      <%end%>
-      
-      #endif // <%=@context[:name]%>_H
-      EOS
+    if ((!optz.nil?) && (optz[:destroy]))
+      UnityModuleGenerator.new( divine_options(optz) ).destroy(module_name)
+    else
+      UnityModuleGenerator.new( divine_options(optz) ).generate(module_name)
+    end
   end
 
-  def create(path, optz={})
-  
-    extract_context(path, optz)
-
-    if !optz.nil? && (optz[:destroy] == true)
-      @ceedling[:streaminator].stdout_puts "Destroying '#{path}'..."
-      @files.each do |file|
-        if File.exist?(file[:path])
-          @ceedling[:streaminator].stdout_puts "File #{file[:path]} deleted"
-        else
-          @ceedling[:streaminator].stdout_puts "File #{file[:path]} does not exist!"
-        end
-      end
-      exit
-    end
-
-    @ceedling[:streaminator].stdout_puts "Generating '#{path}'..."
-
-    [File.dirname(@files[0][:path]), File.dirname(@files[1][:path])].each do |dir|
-      makedirs(dir, {:verbose => true})
-    end
-
-    # define_name = headername.gsub(/\.h$/, '_H').upcase
-
-    @files[0][:template] = @test_template
-    @files[1][:template] = @source_template
-    @files[2][:template] = @header_template
-
-    @files.each do |file|
-      if File.exist?(file[:path])
-        @ceedling[:streaminator].stdout_puts "File #{file[:path]} already exists!"
-      else
-        File.open(file[:path], 'w') do |new_file|
-          new_file << ERB.new(file[:template], 0, "<>").result(binding)
-        end
-        @ceedling[:streaminator].stdout_puts "File #{file[:path]} created"
-      end
-    end
-
+  def stub_from_header(module_name, optz={})
+    require "cmock.rb" #From CMock
+    stuboptz = divine_options(optz)
+    pathname = optz[:path_inc] || optz[:path_src] || "src"
+    filename = File.expand_path(optz[:module_root_path], File.join(pathname, module_name + ".h"))
+    CMock.new(stuboptz).setup_skeletons(filename)
   end
-  
+
   private
-  
-  def extract_context(path, optz={})
-    if (!defined?(MODULE_GENERATOR_PROJECT_ROOT) ||
-        !defined?(MODULE_GENERATOR_SOURCE_ROOT) ||
-        !defined?(MODULE_GENERATOR_TEST_ROOT))
-      raise "You must have ':module_generator:project_root:', ':module_generator:source_root:' and ':module_generator:test_root:' defined in your Ceedling configuration file"
-    end
-    
-    @context = {}
 
-    @context[:paths] = {
-      :base => @ceedling[:file_wrapper].get_expanded_path(MODULE_GENERATOR_PROJECT_ROOT).gsub('\\', '/').sub(/^\//, '').sub(/\/$/, ''),
-      :src => MODULE_GENERATOR_SOURCE_ROOT.gsub('\\', '/').sub(/^\//, '').sub(/\/$/, ''),
-      :test => MODULE_GENERATOR_TEST_ROOT.gsub('\\', '/').sub(/^\//, '').sub(/\/$/, '')
+  def divine_options(optz={})
+    unity_generator_options =
+    {
+      :path_src     => ((defined? MODULE_GENERATOR_SOURCE_ROOT ) ? MODULE_GENERATOR_SOURCE_ROOT.gsub('\\', '/').sub(/^\//, '').sub(/\/$/, '') : "src" ),
+      :path_inc     => ((defined? MODULE_GENERATOR_INC_ROOT ) ?
+                                 MODULE_GENERATOR_INC_ROOT.gsub('\\', '/').sub(/^\//, '').sub(/\/$/, '')
+                                 : (defined? MODULE_GENERATOR_SOURCE_ROOT ) ?
+                                 MODULE_GENERATOR_SOURCE_ROOT.gsub('\\', '/').sub(/^\//, '').sub(/\/$/, '')
+                                 : "src" ),
+      :path_tst     => ((defined? MODULE_GENERATOR_TEST_ROOT   ) ? MODULE_GENERATOR_TEST_ROOT.gsub(  '\\', '/').sub(/^\//, '').sub(/\/$/, '') : "test" ),
+      :pattern      => optz[:pattern],
+      :test_prefix  => ((defined? PROJECT_TEST_FILE_PREFIX     ) ? PROJECT_TEST_FILE_PREFIX : "Test" ),
+      :mock_prefix  => ((defined? CMOCK_MOCK_PREFIX            ) ? CMOCK_MOCK_PREFIX : "Mock" ),
+      :includes     => ((defined? MODULE_GENERATOR_INCLUDES    ) ? MODULE_GENERATOR_INCLUDES : {} ),
+      :boilerplates => ((defined? MODULE_GENERATOR_BOILERPLATES) ? MODULE_GENERATOR_BOILERPLATES : {} ),
+      :naming       => ((defined? MODULE_GENERATOR_NAMING      ) ? MODULE_GENERATOR_NAMING : nil ),
+      :update_svn   => ((defined? MODULE_GENERATOR_UPDATE_SVN  ) ? MODULE_GENERATOR_UPDATE_SVN : false ),
+      :skeleton_path=> ((defined? MODULE_GENERATOR_SOURCE_ROOT ) ? MODULE_GENERATOR_SOURCE_ROOT.gsub('\\', '/').sub(/^\//, '').sub(/\/$/, '') : "src" ),
+      :test_define  => ((defined? MODULE_GENERATOR_TEST_DEFINE ) ? MODULE_GENERATOR_TEST_DEFINE : "TEST" ),
     }
 
-    location = File.dirname(path.gsub('\\', '/'))
-    location.sub!(/^\/?#{@context[:paths][:base]}\/?/i, '')
-    location.sub!(/^\/?#{@context[:paths][:src]}\/?/i, '')
-    location.sub!(/^\/?#{@context[:paths][:test]}\/?/i, '')
-    
-    @context[:location] = location
+    # Read Boilerplate template file.
+    if (defined? MODULE_GENERATOR_BOILERPLATE_FILES)
 
-    @context[:name] = File.basename(path).sub(/\.[ch]$/, '')
-    
-    # p @context[:name]
-    
-    @context[:testname] = "test_#{@context[:name]}.c"
-    @context[:sourcename] = "#{@context[:name]}.c"
-    @context[:headername] = "#{@context[:name]}.h"
-    
-    # p @context
+      bf = MODULE_GENERATOR_BOILERPLATE_FILES
 
-    @files = [
-      {:path => File.join(MODULE_GENERATOR_PROJECT_ROOT, @context[:paths][:test], location, @context[:testname])},
-      {:path => File.join(MODULE_GENERATOR_PROJECT_ROOT, @context[:paths][:src],  location, @context[:sourcename])},
-      {:path => File.join(MODULE_GENERATOR_PROJECT_ROOT, @context[:paths][:src],  location, @context[:headername])}
-    ]
-    
-    # p @files
+      if !bf[:src].nil? && File.exists?(bf[:src])
+        unity_generator_options[:boilerplates][:src] = File.read(bf[:src])
+      end
+
+      if !bf[:inc].nil? && File.exists?(bf[:inc])
+        unity_generator_options[:boilerplates][:inc] = File.read(bf[:inc])
+      end
+
+      if !bf[:tst].nil? && File.exists?(bf[:tst])
+        unity_generator_options[:boilerplates][:tst] = File.read(bf[:tst])
+      end
+    end
+
+    # If using "create[<module_root>:<module_name>]" option from command line.
+    unless optz[:module_root_path].to_s.empty?
+      unity_generator_options[:path_src] = File.join(optz[:module_root_path], unity_generator_options[:path_src])
+      unity_generator_options[:path_inc] = File.join(optz[:module_root_path], unity_generator_options[:path_inc])
+      unity_generator_options[:path_tst] = File.join(optz[:module_root_path], unity_generator_options[:path_tst])
+    end
+
+    return unity_generator_options
   end
-  
+
 end
