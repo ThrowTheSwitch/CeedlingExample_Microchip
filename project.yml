@@ -25,9 +25,11 @@
 #   :use_assembly: FALSE
 
 :environment:
-   - :mcu: 24HJ128GP202
+   - :mcfolder: /Applications/microchip
    - :xc: XC16
    - :xcvers: v2.00
+   - :xcbin: xc16-gcc
+   - :mcu: 24HJ128GP202
 
 :extension:
   :executable: .out
@@ -41,7 +43,7 @@
   :support:
     - test/support
   :include:
-    - /Applications/microchip/#{ENV['XC']}/#{ENV['XCVERS']}/support/PIC24H/h/
+    - "#{ENV['MCFOLDER']}/#{ENV['XC']}/#{ENV['XCVERS']}/support/PIC24H/h/"
 
 :defines:
   # in order to add common defines:
@@ -88,7 +90,7 @@
 
 :tools:
   :test_compiler:
-    :executable: xc16-gcc
+    :executable: "#{ENV['MCFOLDER']}/#{ENV['XC']}/#{ENV['XCVERS']}/bin/#{ENV['XCBIN']}"
     :arguments:
       - -mcpu=#{ENV['MCU']}
       - -x c
@@ -102,9 +104,8 @@
       # - -Os # This works only with paid XC16 compiler versions
       # - -mlarge-code
       # - -mlarge-arrays
-      #- -mdfp=#{ENV['HOMEDIR']}/.mchp_packs/Microchip/dsPIC33F-GP-MC_DFP/1.3.64/xc16
   :test_linker:
-    :executable: xc16-gcc
+    :executable: "#{ENV['MCFOLDER']}/#{ENV['XC']}/#{ENV['XCVERS']}/bin/#{ENV['XCBIN']}"
     :arguments:
       - -mcpu=#{ENV['MCU']}
       - ${1}
@@ -120,7 +121,7 @@
       - ${1}
 
   :release_compiler:
-    :executable: xc16-gcc
+    :executable: "#{ENV['MCFOLDER']}/#{ENV['XC']}/#{ENV['XCVERS']}/bin/#{ENV['XCBIN']}"
     :arguments:
       - -mcpu=#{ENV['MCU']}
       - -x c
@@ -136,7 +137,7 @@
       # - -mlarge-code
       # - -mlarge-arrays
   :release_linker:
-    :executable: xc16-gcc
+    :executable: "#{ENV['MCFOLDER']}/#{ENV['XC']}/#{ENV['XCVERS']}/bin/#{ENV['XCBIN']}"
     :arguments:
       - -mcpu=#{ENV['MCU']}
       - ${1}
