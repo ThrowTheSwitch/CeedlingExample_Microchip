@@ -19,7 +19,7 @@ Edit: 11/01/2021
 * You only need to change XC16 compiler path (line 34) inside "project.yml" file to yours. 
 
 Edit: 2022-12-07
-
+* Update to use XC16 v2.00
 * Ceedling updated to 0.31.1
 * Update Simulation configuration located in test/simulation
 
