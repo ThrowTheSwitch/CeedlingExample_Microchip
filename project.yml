@@ -26,7 +26,8 @@
 
 :environment:
    - :mcu: 24HJ128GP202
-   - :homedir: /User/directory
+   - :xc: XC16
+   - :xcvers: v2.00
 
 :extension:
   :executable: .out
@@ -40,7 +41,7 @@
   :support:
     - test/support
   :include:
-    - /Applications/microchip/xc16/v2.00/support/PIC24H/h/
+    - /Applications/microchip/#{ENV['XC']}/#{ENV['XCVERS']}/support/PIC24H/h/
 
 :defines:
   # in order to add common defines:
@@ -101,20 +102,22 @@
       # - -Os # This works only with paid XC16 compiler versions
       # - -mlarge-code
       # - -mlarge-arrays
-      - -mdfp=#{ENV['HOMEDIR']}/.mchp_packs/Microchip/dsPIC33F-GP-MC_DFP/1.3.64/xc16
+      #- -mdfp=#{ENV['HOMEDIR']}/.mchp_packs/Microchip/dsPIC33F-GP-MC_DFP/1.3.64/xc16
   :test_linker:
     :executable: xc16-gcc
     :arguments:
       - -mcpu=#{ENV['MCU']}
       - ${1}
-      - -o "./build/test/TestBuild.out"
-      - -Wl,-Tp24HJ128GP202.gld
+      - -o ${2}
+      - -Wl,-Tp#{ENV['MCU']}.gld,--heap=0
+
   :test_fixture:
     :executable: ruby
     :name: "Microchip simulator test fixture"
-    :stderr_redirect: :auto #inform Ceedling what model of $stderr capture to use
+    :stderr_redirect: :win #inform Ceedling what model of $stderr capture to use
     :arguments:
       - test/simulation/sim_test_fixture.rb
+      - ${1}
 
   :release_compiler:
     :executable: xc16-gcc

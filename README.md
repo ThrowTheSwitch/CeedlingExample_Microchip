@@ -18,4 +18,28 @@ Edit: 11/01/2021
 
 * You only need to change XC16 compiler path (line 34) inside "project.yml" file to yours. 
 
+Edit: 2022-12-07
+
+* Ceedling updated to 0.31.1
+* Update Simulation configuration located in test/simulation
+
+- sim_test_fixture.rd
+sim_test_fixture.rd now programs and runs the test binary.
+Changes eliminate the need for "sleep" and "wait" timeouts and breakpoints.
+
+- sim_instructions.txt
+This file should only include configuration for the device - Device, HWTool and "set".
+Running commands - Program, Reset, Run, Wait, Sleep, Quit - should not be used.
+
+- project.yml
+
+```yaml
+  :test_fixture:
+    :executable: ruby
+    :name: "Microchip simulator test fixture"
+    :stderr_redirect: :win #inform Ceedling what model of $stderr capture to use
+    :arguments:
+      - test/simulation/sim_test_fixture.rb
+      - ${1}
+```
 

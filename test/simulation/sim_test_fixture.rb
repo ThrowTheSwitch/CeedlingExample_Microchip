@@ -1,35 +1,48 @@
-# OUT_FILE = "test/simulation/out.txt"
-# File.delete OUT_FILE if File.exists? OUT_FILE
-# IO.popen("sim30 test/simulation/sim_instructions.txt")
-# sleep 1
-# if File.exists? OUT_FILE
-#     file_contents = File.read OUT_FILE
-#     print file_contents
-# end
+require 'open3'
 
-require 'rbconfig'
+MDB = "/Applications/microchip/mplabx/v6.05/mplab_platform/bin/mdb.sh"
+SCRIPT_FILE = "./test/simulation/sim_instructions.txt"
 
-OUT_FILE = "./test/simulation/out.txt"
+test_file = ARGV[0]
 
-File.delete OUT_FILE if File.exists? OUT_FILE
+stdin, stdout, stderr, wait_thr = Open3.popen3(MDB, SCRIPT_FILE)
 
-# this_os = RbConfig::CONFIG['host_os']
+stdin.puts("Program " + test_file)
+stdin.puts("Run")
 
-# if (this_os =~ /mswin|mingw|cygwin/)
-    # var = IO.popen("c:\\Program Files (x86)\\Microchip\\MPLABX\\mplab_ide\\bin>mdb.bat ./test/simulation/sim_instructions.txt > " + OUT_FILE)
-# elsif (this_os =~ /darwin1[[:digit:]]/)
-var = IO.popen("/Applications/microchip/mplabx/v6.05/mplab_platform/bin/mdb.sh  ./test/simulation/sim_instructions.txt")
-    # var = "/Applications/microchip/mplabx/v6.05/mplab_platform/bin/mdb.sh  ./test/simulation/sim_instructions.txt"
-# end
+result = []
 
-result = var.readlines
+# Send Quit when test completion, unexpected termination
+# or file not found appears on STDOUT
+stdout.each do |line|
+	result = result + [line]
+	if line.match(/(^(?:OK|FAIL)\n)|(^Stop.*)|(^File.*)/)
+		stdin.puts("Quit")
+	end
+end
+
+# consume stderr messages
+errors = stderr.readlines
+
 Process.waitall
 
+# strio out command prompt
+result = result.map {|s| s.gsub(/^>/, "")}
 
-if File.exists? OUT_FILE
-    file_contents = File.read OUT_FILE
-    print file_contents
-else
-    print result
+# find the test results
+test_start = result.find_index { |line| line.match(/^.*\:(?:FAIL|PASS|IGNORE)/) }
+test_status = result.find_index { |line| line.match(/^(?:OK|FAIL)\n/) }
 
+# start and last will be missing if code causes an Exception
+if test_start & test_status
+	result = result[test_start , (test_status - test_start) + 1]
+end
+
+# Play back results and errors
+result.each do | line |
+	STDOUT.print line
+end
+
+errors.each do | line |
+	STDERR.print line
 end
