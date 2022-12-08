@@ -10,9 +10,9 @@
   :use_test_preprocessor: TRUE
   :use_auxiliary_dependencies: TRUE
   :build_root: build
-  :release_build: FALSE
+#  :release_build: TRUE
   :test_file_prefix: test_
-  :which_ceedling: vendor/ceedling
+  :which_ceedling: gem
   :ceedling_version: 0.31.1
   :default_tasks:
     - test:all
@@ -20,16 +20,15 @@
 #:test_build:
 #  :use_assembly: TRUE
 
-# :release_build:
-#   :output: MyApp.out
-#   :use_assembly: FALSE
+#:release_build:
+#  :output: MyApp.out
+#  :use_assembly: FALSE
 
 :environment:
-   - :mcfolder: /Applications/microchip
-   - :xc: XC16
-   - :xcvers: v2.00
-   - :xcbin: xc16-gcc
-   - :mcu: 24HJ128GP202
+  # - :mch_root: "/Applications/microchip"
+  # - :mplabx_vers: "v6.05"
+  # - :xc: "xc16"
+  # - :xc_version: "v2.00"
 
 :extension:
   :executable: .out
@@ -43,7 +42,9 @@
   :support:
     - test/support
   :include:
-    - "#{ENV['MCFOLDER']}/#{ENV['XC']}/#{ENV['XCVERS']}/support/PIC24H/h/"
+     - "/Applications/microchip/xc16/v2.00/support/PIC24H/h/"
+    #- "C:/ProgramFiles/Microchip/xc16/v1.61/support/PIC24H/h/"
+
 
 :defines:
   # in order to add common defines:
@@ -59,9 +60,14 @@
   :test:
     - *common_defines
     - TEST
+
   :test_preprocess:
     - *common_defines
     - TEST
+
+:unity:
+  :defines:
+    - UNITY_INCLUDE_CONFIG_H
 
 :cmock:
   :mock_prefix: mock_
@@ -87,16 +93,22 @@
     :html_medium_threshold: 75
     :html_high_threshold: 90
 
+#:tools:
+# Ceedling defaults to using gcc for compiling, linking, etc.
+# As [:tools] is blank, gcc will be used (so long as it's in your system path)
+# See documentation to configure a given toolchain for use
 
 :tools:
   :test_compiler:
-    :executable: "#{ENV['MCFOLDER']}/#{ENV['XC']}/#{ENV['XCVERS']}/bin/#{ENV['XCBIN']}"
+    :executable: xc16-gcc
     :arguments:
-      - -mcpu=#{ENV['MCU']}
+      - -mcpu=24HJ128GP202
       - -x c
       - -c
       - "${1}"
       - -o "${2}"
+      - -D_DEBUG
+      - -D__MPLAB_DEBUGGER_SIMULATOR=1
       - -D$: COLLECTION_DEFINES_TEST_AND_VENDOR
       - -I"$": COLLECTION_PATHS_TEST_SUPPORT_SOURCE_INCLUDE_VENDOR
       - -Wall
@@ -105,25 +117,27 @@
       # - -mlarge-code
       # - -mlarge-arrays
   :test_linker:
-    :executable: "#{ENV['MCFOLDER']}/#{ENV['XC']}/#{ENV['XCVERS']}/bin/#{ENV['XCBIN']}"
+    :executable: xc16-gcc
     :arguments:
-      - -mcpu=#{ENV['MCU']}
+      - -mcpu=24HJ128GP202
       - ${1}
       - -o ${2}
-      - -Wl,-Tp#{ENV['MCU']}.gld,--heap=0
+      - -Wl,-Tp24HJ128GP202.gld,--heap=0,
+        --defsym=__MPLAB_BUILD=1,--defsym=__MPLAB_DEBUG=1,
+        --defsym=__DEBUG=1,-D__DEBUG=__DEBUG,--defsym=__MPLAB_DEBUGGER_SIMULATOR=1
 
   :test_fixture:
     :executable: ruby
     :name: "Microchip simulator test fixture"
-    :stderr_redirect: :win #inform Ceedling what model of $stderr capture to use
+    :stderr_redirect: :auto #inform Ceedling what model of $stderr capture to use
     :arguments:
       - test/simulation/sim_test_fixture.rb
       - ${1}
 
   :release_compiler:
-    :executable: "#{ENV['MCFOLDER']}/#{ENV['XC']}/#{ENV['XCVERS']}/bin/#{ENV['XCBIN']}"
+    :executable: xc16-gcc
     :arguments:
-      - -mcpu=#{ENV['MCU']}
+      - -mcpu=24HJ128GP202
       - -x c
       - -c
       - "${1}"
@@ -136,17 +150,15 @@
       # - -Os # This works only with paid XC16 compiler versions
       # - -mlarge-code
       # - -mlarge-arrays
+
   :release_linker:
-    :executable: "#{ENV['MCFOLDER']}/#{ENV['XC']}/#{ENV['XCVERS']}/bin/#{ENV['XCBIN']}"
+    :executable: xc16-gcc
     :arguments:
-      - -mcpu=#{ENV['MCU']}
+      - -mcpu=24HJ128GP202
       - ${1}
       - -o "${2}"
-      - -Wl,-Tp#{ENV['MCU']}.gld,-Map=./build/release/MyApp.map,--report-mem
-#:tools:
-# Ceedling defaults to using gcc for compiling, linking, etc.
-# As [:tools] is blank, gcc will be used (so long as it's in your system path)
-# See documentation to configure a given toolchain for use
+      - -Wl,-Tp24HJ128GP202.gld,-Map=./build/release/MyPicApp.map,--report-mem
+
 
 # LIBRARIES
 # These libraries are automatically injected into the build process. Those specified as
@@ -162,9 +174,8 @@
 
 :plugins:
   :load_paths:
-    - vendor/ceedling/plugins
+    - "#{Ceedling.load_path}"
   :enabled:
     - stdout_pretty_tests_report
     - module_generator
-    - raw_output_report
 ...
