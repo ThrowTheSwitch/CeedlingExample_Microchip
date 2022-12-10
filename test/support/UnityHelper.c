@@ -1,6 +1,4 @@
-#include "UnityHelper.h"
-
 void UnityHelperDeadLoop(void){
-   while(0){};
+   while(1){};
 }
 
