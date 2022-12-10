@@ -41,5 +41,5 @@ result.each do | line |
 end
 
 errors.each do | line |
-	STDOUT.print line
+	STDERR.print line
 end
