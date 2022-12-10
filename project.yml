@@ -101,9 +101,10 @@
       - -mcpu=24HJ128GP202
       - -x c
       - -c
+      - -g
       - "${1}"
       - -o "${2}"
-      - -D_DEBUG
+      - -D__DEBUG=__DEBUG
       - -D__MPLAB_DEBUGGER_SIMULATOR=1
       - -D$: COLLECTION_DEFINES_TEST_AND_VENDOR
       - -I"$": COLLECTION_PATHS_TEST_SUPPORT_SOURCE_INCLUDE_VENDOR
@@ -118,9 +119,7 @@
       - -mcpu=24HJ128GP202
       - ${1}
       - -o ${2}
-      - -Wl,-Tp24HJ128GP202.gld,--heap=0,
-        --defsym=__MPLAB_BUILD=1,--defsym=__MPLAB_DEBUG=1,
-        --defsym=__DEBUG=1,-D__DEBUG=__DEBUG,--defsym=__MPLAB_DEBUGGER_SIMULATOR=1
+      - "-Wl,-Tp24HJ128GP202.gld,--heap=0,--defsym=__MPLAB_BUILD=1,--defsym=__MPLAB_DEBUG=1,--defsym=__DEBUG=1,-D__DEBUG=__DEBUG,--defsym=__MPLAB_DEBUGGER_SIMULATOR=1"
 
   :test_fixture:
     :executable: ruby
