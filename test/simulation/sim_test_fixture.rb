@@ -16,7 +16,7 @@ stdin.puts("Run")
 stdin.puts("Wait 30000")
 stdin.puts("Quit")
 
-# Filter out tedious MDB Java logr and NetBeans errors
+# Filter out MDB Java logr and NetBeans errors
 errors = stderr.readlines.reject { | line | line.match(/(logr|dumb|Preferences)/)}
 result = stdout.readlines
 
@@ -25,8 +25,9 @@ Process.waitall
 # Remove stray command prompts
 result = result.map {|s| s.gsub(/^>/, "")}
 
-# find the test results block
+# First line of results
 test_start = result.find_index { |line| line.match(/^.*\:(?:FAIL|PASS|IGNORE)/) }
+# Last line of results
 test_status = result.find_index { |line| line.match(/^(?:OK|FAIL)\n/) }
 
 # start and last will be missing if code causes an Exception
