@@ -178,7 +178,6 @@ void test_GPIO_ClearBit_should_clear_the_corresponding_SFR_bit_for_B3(void)
 
 void test_GPIO_ClearBit_should_clear_the_corresponding_SFR_bit_for_B4(void)
 {
-    TEST_FAIL();
     // Create initial condition
     LATBbits.LATB4 = 1;
     // Call function under test
