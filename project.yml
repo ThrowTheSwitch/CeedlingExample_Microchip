@@ -60,14 +60,10 @@
   :test:
     - *common_defines
     - TEST
-
+    - UNITY_INCLUDE_CONFIG_H
   :test_preprocess:
     - *common_defines
     - TEST
-
-:unity:
-  :defines:
-    - UNITY_INCLUDE_CONFIG_H
 
 :cmock:
   :mock_prefix: mock_
