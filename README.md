@@ -24,14 +24,12 @@ Edit: 2022-12-07
 * Update Simulation configuration located in test/simulation
 
 Edit: 2023-01-04
-- sim_test_fixture.rd
-sim_test_fixture.rd now programs and runs the test binary.
-Changes eliminate the need for "sleep" and "wait" timeouts and breakpoints.
-
-MDB is configured using the `:text_fixture:` section of the `project.yml` file.
-
-  - The first 6 arguments are required, and must be supplied in the given order.
-  - Set options must be supplied as `option value` pairs.
+* Vendor directories removed
+* sim_test_fixture.rd now programs and runs the test binary
+* [UnityDeadLoop](http://www.throwtheswitch.org/build/cross) configuation added 
+* Fixture configuration moved to `:text_fixture:` section of the `project.yml` file.
+    - The first 6 arguments are required, and must be supplied in the given order.
+    - Set options must be supplied as `option value` pairs.
 
 ```yaml
   :test_fixture:
