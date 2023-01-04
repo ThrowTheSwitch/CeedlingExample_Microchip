@@ -29,8 +29,9 @@ sim_test_fixture.rd now programs and runs the test binary.
 Changes eliminate the need for "sleep" and "wait" timeouts and breakpoints.
 
 MDB is configured using the `:text_fixture:` section of the `project.yml` file.
-The first 6 arguments are required, and must be supplied in the given order.
-Set options must be supplied as `option value` pairs.
+
+  - The first 6 arguments are required, and must be supplied in the given order.
+  - Set options must be supplied as `option value` pairs.
 
 ```yaml
   :test_fixture:
