@@ -1,20 +1,25 @@
 require 'open3'
 
-MDB = "mdb.sh"  # or "mdb"
+test_file = ARGV.shift
+mdb_command = ARGV.shift
+timeout = ARGV.shift
 
-CONFIG_FILE = "./test/simulation/sim_configuration.txt"
+stdin, stdout, stderr, wait_thr = Open3.popen3(mdb_command)
 
-test_file = ARGV[0]
+stdin.puts "Device #{ARGV.shift}"
+stdin.puts "Hwtool #{ARGV.shift}"
 
-stdin, stdout, stderr, wait_thr = Open3.popen3(MDB, CONFIG_FILE)
+ARGV.each_slice(2) do | opt, val |
+	stdin.puts "set #{opt} #{val}"
+end
 
-stdin.puts("Program " + test_file)
-stdin.puts("Break UnityHelperDeadLoop")
-stdin.puts("Run")
+stdin.puts "Program #{test_file}"
 
-# Failsafe: exit after 30 seconds if SIM does not halt
-stdin.puts("Wait 30000")
-stdin.puts("Quit")
+stdin.puts "Break UnityHelperDeadLoop"
+stdin.puts "Run"
+stdin.puts "Wait #{timeout}"
+stdin.puts "Quit"
+
 
 # Filter out MDB Java logr and NetBeans errors
 errors = stderr.readlines.reject { | line | line.match(/(logr|dumb|Preferences)/)}
@@ -22,24 +27,17 @@ result = stdout.readlines
 
 Process.waitall
 
-# Remove stray command prompts
+# Remove command prompts
 result = result.map {|s| s.gsub(/^>/, "")}
 
-# First line of results
-test_start = result.find_index { |line| line.match(/^.*\:(?:FAIL|PASS|IGNORE)/) }
-# Last line of results
+# Results start 2 lines after Running, and end with OK or FAIL
+test_start = result.find_index { |line| line.match(/^Running/) }
 test_status = result.find_index { |line| line.match(/^(?:OK|FAIL)\n/) }
 
-# start and last will be missing if code causes an Exception
 if (test_start != nil) & (test_status != nil)
-	result = result[test_start , (test_status - test_start) + 1]
+	result = result[test_start + 2 , (test_status - test_start - 1)]
 end
 
-# Play back cleaned results and errors
-result.each do | line |
-	STDOUT.print line
-end
+STDOUT.print result.join()
+STDERR.print errors.join()
 
-errors.each do | line |
-	STDERR.print line
-end

@@ -23,23 +23,34 @@ Edit: 2022-12-07
 * Ceedling updated to 0.31.1
 * Update Simulation configuration located in test/simulation
 
+Edit: 2023-01-04
 - sim_test_fixture.rd
 sim_test_fixture.rd now programs and runs the test binary.
 Changes eliminate the need for "sleep" and "wait" timeouts and breakpoints.
 
-- sim_instructions.txt
-This file should only include configuration for the device - Device, HWTool and "set".
-Running commands - Program, Reset, Run, Wait, Sleep, Quit - should not be used.
-
-- project.yml
+MDB is configured using the `:text_fixture:` section of the `project.yml` file.
+The first 6 arguments are required, and must be supplied in the given order.
+Set options must be supplied as `option value` pairs.
 
 ```yaml
   :test_fixture:
     :executable: ruby
     :name: "Microchip simulator test fixture"
-    :stderr_redirect: :win #inform Ceedling what model of $stderr capture to use
+    :stderr_redirect: :auto #inform Ceedling what model of $stderr capture to use
     :arguments:
       - test/simulation/sim_test_fixture.rb
       - ${1}
+      # MDB command
+      - "mdb.sh"
+      # MDB timeout - fail safe
+      - "30000"
+      # Device
+      - PIC24HJ128GP202
+      # HWTOOL
+      - SIM
+      # Set options
+      - "warningmessagebreakoptions.W0011_CORE_SIM32_UNIMPLEMENTED_RAMACCESS break"
+      - "uart1io.output window"
+      - "uart1io.uartioenabled true"
 ```
 

@@ -128,6 +128,18 @@
     :arguments:
       - test/simulation/sim_test_fixture.rb
       - ${1}
+      # MDB command
+      - "mdb.sh"
+      # MDB timeout - fail safe
+      - "30000"
+      # Device
+      - PIC24HJ128GP202
+      # HWTOOL
+      - SIM
+      # Set options
+      - "warningmessagebreakoptions.W0011_CORE_SIM32_UNIMPLEMENTED_RAMACCESS break"
+      - "uart1io.output window"
+      - "uart1io.uartioenabled true"
 
   :release_compiler:
     :executable: xc16-gcc
