@@ -1,4 +1,0 @@
-test_system.c:12:test_ShouldAbortApp_should_return_false_for_now:PASS
------------------------
-1 Tests 0 Failures 0 Ignored
-OK

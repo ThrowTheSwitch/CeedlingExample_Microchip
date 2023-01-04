@@ -1,4 +1,5 @@
 #include "unity.h"
+#include "UnityHelper.h"
 #include "main.h"
 #include "mock_system.h"
 #include "mock_led_control.h"

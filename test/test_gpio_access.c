@@ -1,4 +1,5 @@
 #include "unity.h"
+#include "UnityHelper.h"
 #include "gpio_access.h"
 #include "p24HJ128GP202.h"
 #include <string.h>  // for memset()

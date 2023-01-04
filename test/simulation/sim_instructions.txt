@@ -1,6 +1,0 @@
-LD pic24super                  
-LC build/release/TestBuild.out
-IO NULL test/simulation/out.txt
-RP
-E
-quit
